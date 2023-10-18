@@ -1,12 +1,13 @@
 from django.db import models
-# from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
 
-# TODO
-# class User(AbstractUser):
-#     following = models.ManyToManyField('self', verbose_name='Подписки', related_name='followers')
-#     favorite = models.ForeignKey('Recipe', on_delete=models.SET_NULL, verbose_name='Избранное')
-#     def is_subscribed(self): # 
-        
+USER = get_user_model()
+
+
+class User(USER):
+    following = models.ManyToManyField('self', verbose_name='Подписки', related_name='followers')
+    favorite = models.ForeignKey('Recipe', on_delete=models.CASCADE, verbose_name='Избранное')
 
 
 class Ingredient(models.Model):
@@ -18,6 +19,7 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
+    author = models.ForeignKey('User', on_delete=models.CASCADE, verbose_name='Автор')
     name = models.CharField('Название', max_length=200)
     text = models.TextField('Описание')
     image = models.ImageField('Картинка', upload_to='images/recipes')
@@ -25,14 +27,10 @@ class Recipe(models.Model):
     tags = models.ManyToManyField(
         'Tag',
         verbose_name='Теги',
-        blank=True,
-        null=True,
     )
     ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='Ингридиенты',
-        blank=True,
-        null=True,
     )
 
     def __str__(self):
@@ -42,6 +40,7 @@ class Recipe(models.Model):
 class Tag(models.Model):
     name = models.CharField('Название', max_length=200, blank=True)
     color = models.CharField('Цвет', max_length=7, default=None)
+    
 
     def __str__(self):
         return self.name[:50]
