@@ -1,4 +1,4 @@
-from recipes.models import Ingredient, Recipe, Tag, RecipeIngredient, RecipeTag
+from recipes.models import Ingredient, Recipe, Tag
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.filters import SearchFilter

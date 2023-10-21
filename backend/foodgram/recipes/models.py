@@ -23,8 +23,8 @@ class User(AbstractUser):
     email = models.EmailField('email-адрес', unique=True)
     first_name = models.CharField('Имя', max_length=150)
     last_name = models.CharField('Фамилия', max_length=150)
-    following = models.ManyToManyField('self', verbose_name='Подписки', related_name='followers', blank=True)
-    favorite = models.ForeignKey('Recipe', on_delete=models.CASCADE, verbose_name='Избранное', blank=True, null=True)
+    follows = models.ManyToManyField('self', verbose_name='Подписки', related_name='followers', blank=True)
+    favorite = models.ManyToManyField('Recipe', verbose_name='Избранное', blank=True)
 
 
 class Ingredient(models.Model):
@@ -61,13 +61,3 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name[:50]
-
-
-class RecipeIngredient(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
-
-
-class RecipeTag(models.Model):
-    recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)
-    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)

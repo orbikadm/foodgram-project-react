@@ -11,6 +11,7 @@ class UsersSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = (
+            'id',
             'username',
             'email',
             'first_name',
@@ -45,18 +46,6 @@ class AuthTokenSerializer(serializers.ModelSerializer):
 
 
 
-
-
-
-
-
-class RecipeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Recipe
-        fields = '__all__'
-
-
 class IngredientSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -69,3 +58,16 @@ class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
         fields = '__all__'
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    author = UsersSerializer(read_only=True)
+    tags = TagSerializer(many=True)
+    ingredients = IngredientSerializer(many=True)
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'author', 'name', 'text', 'image', 'cooking_time', 'tags', 'ingredients')
+
+
+
