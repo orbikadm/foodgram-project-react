@@ -14,5 +14,6 @@ api_router.register(
 )
 
 urlpatterns = [
+    path('', include('djoser.urls.jwt')),
     path('', include(api_router.urls)),
 ]
