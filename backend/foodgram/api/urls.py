@@ -13,7 +13,11 @@ api_router.register(
     basename='users'
 )
 
+# TODO Добавить урл users/{id}  и  урл users/set_password/ (Разобраться почему не работает)
+
 urlpatterns = [
-    path('', include('djoser.urls.jwt')),
+    # path('', include('djoser.urls.jwt')),
     path('', include(api_router.urls)),
+    path('auth/', include('djoser.urls')),
+    path('auth/', include('djoser.urls.authtoken'))
 ]

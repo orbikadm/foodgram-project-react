@@ -23,8 +23,10 @@ class User(AbstractUser):
     email = models.EmailField('email-адрес', unique=True)
     first_name = models.CharField('Имя', max_length=150)
     last_name = models.CharField('Фамилия', max_length=150)
-    follows = models.ManyToManyField('self', verbose_name='Подписки', related_name='followers', blank=True)
-    favorite = models.ManyToManyField('Recipe', verbose_name='Избранное', blank=True)
+    follows = models.ManyToManyField('self', verbose_name='Подписки', related_name='followers', blank=True, symmetrical=False)
+    favorite = models.ManyToManyField('Recipe', verbose_name='Избранное', blank=True, symmetrical=False)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = [username, password, first_name, last_name]
 
 
 class Ingredient(models.Model):
