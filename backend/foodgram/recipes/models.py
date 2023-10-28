@@ -1,32 +1,4 @@
-from collections.abc import Iterable
 from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.validators import UnicodeUsernameValidator
-# from slugify import slugify
-
-
-class User(AbstractUser):
-
-    username_validator = UnicodeUsernameValidator()
-
-    username = models.CharField(
-        'Логин',
-        max_length=150,
-        unique=True,
-        help_text='Обязательное, не более 150 символов. Только буквы, цифры и символы @/./+/-/_',
-        validators=[username_validator],
-        error_messages={
-            'unique': "Пользователь с таким именем или e-mail уже существует",
-        },
-    )
-    password = models.CharField('Пароль', max_length=128)
-    email = models.EmailField('email-адрес', unique=True)
-    first_name = models.CharField('Имя', max_length=150)
-    last_name = models.CharField('Фамилия', max_length=150)
-    follows = models.ManyToManyField('self', verbose_name='Подписки', related_name='followers', blank=True, symmetrical=False)
-    favorite = models.ManyToManyField('Recipe', verbose_name='Избранное', blank=True, symmetrical=False)
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = [username, password, first_name, last_name]
 
 
 class Ingredient(models.Model):

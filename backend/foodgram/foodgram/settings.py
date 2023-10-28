@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'djoser',
     
+    'users.apps.UsersConfig',
     'api.apps.ApiConfig',
     'recipes.apps.RecipesConfig',
 ]
@@ -147,7 +148,7 @@ REST_FRAMEWORK = {
 #     'SERIALIZERS': {},
 # }
 
-AUTH_USER_MODEL = 'recipes.User'
+AUTH_USER_MODEL = 'users.User'
 
 # AUTHENTICATION_BACKENDS = [
 #     'recipes.services.UserModelBackend',
