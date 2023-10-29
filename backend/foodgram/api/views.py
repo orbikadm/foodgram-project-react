@@ -1,8 +1,8 @@
 from recipes.models import Ingredient, Recipe, Tag
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.filters import SearchFilter
-from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer, UsersSerializer
+from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer, UserSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -11,6 +11,8 @@ from rest_framework.permissions import (
     IsAuthenticated, IsAuthenticatedOrReadOnly
 )
 
+from .permissions import AdminOrReadOnly
+
 
 
 User = get_user_model()
@@ -18,7 +20,7 @@ User = get_user_model()
 
 class UsersViewSet(ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UsersSerializer
+    serializer_class = UserSerializer
     # permission_classes = (AdminOnly,)
     http_method_names = ['get', 'post']
     lookup_field = 'username'
@@ -58,16 +60,14 @@ class RecipeViewSet(ModelViewSet):
     pagination_class = LimitOffsetPagination
 
 
-class IngredientViewSet(ModelViewSet):
-    allowed_methods = ('GET',)
+class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-    pagination_class = LimitOffsetPagination
     search_fields = ('^name',)
+    permission_classes = (AdminOrReadOnly,)
 
 
-class TagViewSet(ModelViewSet):
-    allowed_methods = ('GET',)
+class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    pagination_class = LimitOffsetPagination
+    permission_classes = (AdminOrReadOnly,)

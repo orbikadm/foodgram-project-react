@@ -24,23 +24,23 @@ class IngredientAdmin(admin.ModelAdmin):
 class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'color', 'slug')
-    list_editable = ('name', 'color', 'slug')
+    # list_editable = ('name', 'color', 'slug')
     empty_value_display = '--не указано--'
 
 
 @admin.register(IngredientToRecipe)
 class RecipeIngredientAdmin(admin.ModelAdmin):
     list_display = ('recipe', 'ingredient', 'amount')
-    list_editable = ('recipe', 'ingredient', 'amount')
+    # list_editable = ('recipe', 'ingredient', 'amount')
 
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe')
-    list_editable = ('user', 'recipe')
+    # list_editable = ('user', 'recipe')
 
 
 @admin.register(Shopping_cart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe')
-    list_editable = ('user', 'recipe')
+    # list_editable = ('user', 'recipe')
