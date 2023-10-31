@@ -68,7 +68,6 @@ class Recipe(models.Model):
         verbose_name='Ингредиенты',
     )
 
-
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
@@ -134,7 +133,7 @@ class Favorite(models.Model):
         return f'{self.user.username} - {self.recipe.name}'
 
 
-class Shopping_cart(models.Model):
+class ShoppingCart(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
