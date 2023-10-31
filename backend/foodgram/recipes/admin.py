@@ -3,8 +3,14 @@ from django.contrib import admin
 from .models import Ingredient, Recipe, Tag, IngredientToRecipe, Favorite, Shopping_cart
 
 
+class IngredientToRecipeAdmin(admin.TabularInline):
+    model = IngredientToRecipe
+    list_display = ('recipe', 'ingredient', 'amount')
+
+
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
+    inlines = (IngredientToRecipeAdmin,)
     list_display = ('name', 'author', 'in_favorites')
     list_filter = ('author', 'name', 'tags')
     empty_value_display = '--не указано--'

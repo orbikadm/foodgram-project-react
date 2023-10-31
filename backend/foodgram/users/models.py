@@ -5,19 +5,16 @@ from .validators import username_validator
 
 
 class User(AbstractUser):
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+
     username = models.CharField(
         'Логин',
         max_length=150,
         unique=True,
-        help_text='Обязательное, не более 150 символов. Только буквы, цифры и символы @/./+/-/_',
         validators=[username_validator],
     )
-    password = models.CharField('Пароль', max_length=128)
     email = models.EmailField('Адрес электронной почты', unique=True)
-    first_name = models.CharField('Имя', max_length=150)
-    last_name = models.CharField('Фамилия', max_length=150)
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = [username, password, first_name, last_name]
 
     class Meta:
         ordering = ('username',)

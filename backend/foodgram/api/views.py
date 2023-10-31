@@ -2,13 +2,13 @@ from recipes.models import Ingredient, Recipe, Tag
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.filters import SearchFilter
-from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer, UserSerializer
+from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer, UserSerializer, RecipeCreateSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import (
-    IsAuthenticated, IsAuthenticatedOrReadOnly
+    IsAuthenticated, IsAuthenticatedOrReadOnly, SAFE_METHODS
 )
 
 from .permissions import AdminOrReadOnly
@@ -59,15 +59,18 @@ class RecipeViewSet(ModelViewSet):
     serializer_class = RecipeSerializer
     pagination_class = LimitOffsetPagination
 
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH'):
+            return RecipeCreateSerializer
+        return RecipeSerializer
+
 
 class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     search_fields = ('^name',)
-    permission_classes = (AdminOrReadOnly,)
 
 
 class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
-    permission_classes = (AdminOrReadOnly,)

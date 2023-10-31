@@ -1,9 +1,10 @@
 from django.db import models
-from django.core.validators import RegexValidator
+from django.core.validators import RegexValidator, MinValueValidator
 from django.contrib.auth import get_user_model
 
 
 User = get_user_model()
+
 
 class Ingredient(models.Model):
     name = models.CharField('Название ингредиента', max_length=200)
@@ -26,8 +27,8 @@ class Tag(models.Model):
         unique=True,
         validators=[
             RegexValidator(
-            '^#([a-fA-F0-9]{6})',
-            message='Неверный формат цвета.',
+                '^#([a-fA-F0-9]{6})',
+                message='Неверный формат цвета.'
             )
         ]
     )
@@ -62,9 +63,9 @@ class Recipe(models.Model):
     )
     ingredients = models.ManyToManyField(
         Ingredient,
-        through = 'IngredientToRecipe',
+        through='IngredientToRecipe',
         through_fields=('recipe', 'ingredient'),
-        verbose_name = 'Ингредиенты',
+        verbose_name='Ингредиенты',
     )
 
 
@@ -89,6 +90,7 @@ class IngredientToRecipe(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         'Количество',
+        validators=[MinValueValidator(1, message='Минимальное количество 1!')]
     )
 
     class Meta:
@@ -102,7 +104,7 @@ class IngredientToRecipe(models.Model):
         ]
 
     def __str__(self):
-        return (f'{self.amount} - {self.ingredient}')
+        return (f'{self.ingredient} - {self.amount}')
 
 
 class Favorite(models.Model):
@@ -136,7 +138,7 @@ class Shopping_cart(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='shopping_user',
+        related_name='shopping_cart',
         verbose_name='Пользователь'
     )
     recipe = models.ForeignKey(
