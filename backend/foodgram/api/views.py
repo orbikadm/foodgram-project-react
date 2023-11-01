@@ -5,7 +5,7 @@ from recipes.models import Ingredient, IngredientToRecipe, Recipe, Tag, Favorite
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.filters import SearchFilter
-from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer, UserSerializer, RecipeCreateSerializer
+from .serializers import RecipeSerializer, IngredientSerializer, TagSerializer, CustomUserSerializer, RecipeCreateSerializer, SubscribeSerializer
 from django.contrib.auth import get_user_model
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -17,17 +17,17 @@ from rest_framework.status import HTTP_400_BAD_REQUEST
 from .permissions import AdminOrReadOnly
 from django.db.models import Sum
 from users.models import Subscribe
+from djoser.views import UserViewSet
 
 
 User = get_user_model()
 
 
-class UsersViewSet(ModelViewSet):
+class CustomUsersViewSet(UserViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = CustomUserSerializer
     # permission_classes = (AdminOnly,)
     http_method_names = ['get', 'post']
-    lookup_field = 'username'
     filter_backends = (SearchFilter,)
     search_fields = ('username',)
 
