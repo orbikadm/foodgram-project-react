@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
@@ -12,14 +13,14 @@ from rest_framework.filters import SearchFilter
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import (
-    IsAuthenticated, IsAuthenticatedOrReadOnly, SAFE_METHODS
+    IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
 )
 
 from recipes.models import (
     Ingredient, IngredientToRecipe, Recipe, Tag, Favorite, ShoppingCart
 )
 from users.models import Subscribe
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientFilter
 from .serializers import (
     RecipeSerializer, IngredientSerializer, TagSerializer,
     CustomUserSerializer, RecipeCreateSerializer, SubscribeSerializer,
@@ -45,6 +46,17 @@ class CustomUsersViewSet(UserViewSet):
     http_method_names = ['get', 'post', 'delete']
     filter_backends = (SearchFilter,)
     search_fields = ('username',)
+    permission_classes = (IsAuthenticatedOrReadOnly,)
+
+    @action(
+        ['get'],
+        permission_classes=(IsAuthenticated,),
+        detail=False
+    )
+    def me(self, request, *args, **kwargs):
+        self.get_object = self.get_instance
+        if request.method == "GET":
+            return self.retrieve(request, *args, **kwargs)
 
     @action(
         detail=True,
@@ -97,6 +109,9 @@ class IngredientViewSet(ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     search_fields = ('^name',)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
+    pagination_class = None
 
 
 class TagViewSet(ReadOnlyModelViewSet):
@@ -104,6 +119,8 @@ class TagViewSet(ReadOnlyModelViewSet):
 
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    pagination_class = None
+    permission_classes = (AllowAny,)
 
 
 class RecipeViewSet(ModelViewSet):
@@ -121,6 +138,7 @@ class RecipeViewSet(ModelViewSet):
     serializer_class = RecipeSerializer
     pagination_class = LimitOffsetPagination
     permission_classes = (IsAuthorOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
     def get_serializer_class(self):

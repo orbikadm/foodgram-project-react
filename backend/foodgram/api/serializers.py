@@ -2,6 +2,7 @@ import base64
 import webcolors
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.files.base import ContentFile
 from django.db.models import F
 from django.db import transaction
@@ -46,12 +47,28 @@ class CustomUserSerializer(UserSerializer):
 class CustomUserCreateSerializer(UserCreateSerializer):
     """Кастомный сериалайзер для создания пользователя."""
 
+    username = serializers.RegexField(r'^[\w.@+-]+\Z')
+
     class Meta:
         model = User
-        fields = User.REQUIRED_FIELDS + (
-            User.USERNAME_FIELD,
+        fields = (
+            'id',
+            'username',
+            'email',
+            'first_name',
+            'last_name',
             'password',
         )
+        extra_kwargs = {
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+            'username': {'required': True},
+        }
+
+    def validate_username(self, username):
+        if len(username) < 1 or len(username) > 150:
+            raise ValidationError('Длина username должна быть от 0 до 150')
+        return username
 
 
 class Base64ImageField(serializers.ImageField):
@@ -215,24 +232,55 @@ class RecipeSerializer(serializers.ModelSerializer):
             return False
         return user.shopping_cart.filter(recipe=obj).exists()
 
-    def validate(self, data):
-        tags_ids = self.initial_data.get("tags")
-        ingredients = self.initial_data.get("ingredients")
+    def validate_ingredients(self, value):
+        ingredients = value
+        if not ingredients:
+            raise ValidationError({
+                'ingredients': 'Нужен хотя бы один ингредиент!'
+            })
+        ingredients_list = []
+        for item in ingredients:
+            ingredient = get_object_or_404(Ingredient, id=item['id'])
+            if ingredient in ingredients_list:
+                raise ValidationError({
+                    'ingredients': 'Ингридиенты не могут повторяться!'
+                })
+            if int(item['amount']) <= 0:
+                raise ValidationError({
+                    'amount': 'Количество ингредиента должно быть больше 0!'
+                })
+            ingredients_list.append(ingredient)
+        return value
 
-        if not tags_ids or not ingredients:
-            raise ValidationError("Недостаточно данных.")
+    def validate_tags(self, value):
+        tags = value
+        if not tags:
+            raise ValidationError({'tags': 'Нужно выбрать хотя бы один тег!'})
+        tags_list = []
+        for tag in tags:
+            if tag in tags_list:
+                raise ValidationError({'tags': 'Теги должны быть уникальными!'})
+            tags_list.append(tag)
+        return value
 
-        tags = tags_exist_validator(tags_ids, Tag)
-        ingredients = ingredients_validator(ingredients, Ingredient)
+    # def validate(self, data):
+    #     tags_ids = self.initial_data.get("tags")
+    #     ingredients = self.initial_data.get("ingredients")
 
-        data.update(
-            {
-                "tags": tags,
-                "ingredients": ingredients,
-                "author": self.context.get("request").user,
-            }
-        )
-        return data
+    #     if not tags_ids or not ingredients:
+    #         raise ValidationError("Недостаточно данных.")
+
+    #     tags = tags_exist_validator(tags_ids, Tag)
+    #     ingredients = ingredients_validator(ingredients, Ingredient)
+
+    #     data.update(
+    #         {
+    #             "tags": tags,
+    #             "ingredients": ingredients,
+    #             "author": self.context.get("request").user,
+    #         }
+    #     )
+    #     return data
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
