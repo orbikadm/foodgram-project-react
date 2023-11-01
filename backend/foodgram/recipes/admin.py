@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import Ingredient, Recipe, Tag, IngredientToRecipe, Favorite, ShoppingCart
+from .models import (
+    Ingredient, Recipe, Tag, IngredientToRecipe, Favorite, ShoppingCart
+)
 
 
 class IngredientToRecipeAdmin(admin.TabularInline):
@@ -13,7 +15,6 @@ class RecipeAdmin(admin.ModelAdmin):
     inlines = (IngredientToRecipeAdmin,)
     list_display = ('name', 'author', 'in_favorites')
     list_filter = ('author', 'name', 'tags')
-    empty_value_display = '--не указано--'
 
     @admin.display(description='В избранном')
     def in_favorites(self, obj):
@@ -30,23 +31,18 @@ class IngredientAdmin(admin.ModelAdmin):
 class TagAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     list_display = ('name', 'color', 'slug')
-    # list_editable = ('name', 'color', 'slug')
-    empty_value_display = '--не указано--'
 
 
 @admin.register(IngredientToRecipe)
 class RecipeIngredientAdmin(admin.ModelAdmin):
     list_display = ('recipe', 'ingredient', 'amount')
-    # list_editable = ('recipe', 'ingredient', 'amount')
 
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe')
-    # list_editable = ('user', 'recipe')
 
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe')
-    # list_editable = ('user', 'recipe')

@@ -6,13 +6,13 @@ from .validators import username_validator
 
 class User(AbstractUser):
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
     username = models.CharField(
         'Логин',
         max_length=150,
         unique=True,
-        validators=[username_validator],
+        validators=(username_validator,),
     )
     email = models.EmailField('Адрес электронной почты', unique=True)
 
@@ -43,7 +43,8 @@ class Subscribe(models.Model):
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'author'),
-                name='subscribe_unique'),
+                name='subscribe_unique'
+            ),
         )
         verbose_name = 'Подписка на автора'
         verbose_name_plural = 'Подписки на авторов'
