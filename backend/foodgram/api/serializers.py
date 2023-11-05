@@ -2,24 +2,21 @@ import base64
 import webcolors
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.files.base import ContentFile
 from django.db.models import F
 from django.db import transaction
-from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import status, serializers
 from rest_framework.validators import ValidationError
 
 from recipes.models import Recipe, Ingredient, Tag, IngredientToRecipe
 from users.models import Subscribe
-from .validators import tags_exist_validator, ingredients_validator
-
+from .validators import get_validate_ingredients, get_validate_tags
 
 User = get_user_model()
 
 
-class CustomUserSerializer(UserSerializer):
+class CustomUserReadSerializer(UserSerializer):
     """Кастомный сериалайзер для пользователей."""
 
     is_subscribed = serializers.SerializerMethodField()
@@ -85,8 +82,8 @@ class Base64ImageField(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class RecipeForSubscribeSerializer(serializers.ModelSerializer):
-    """Сериалайзер рецептов для использования в сериализаторе подписок."""
+class RecipeShortSerializer(serializers.ModelSerializer):
+    """Вспомогательный сериалайзер для доступа к усеченному списку полей."""
 
     image = Base64ImageField()
 
@@ -100,7 +97,7 @@ class RecipeForSubscribeSerializer(serializers.ModelSerializer):
         )
 
 
-class SubscribeSerializer(CustomUserSerializer):
+class SubscribeSerializer(CustomUserReadSerializer):
     """
     Сериалайзер для подписок.
     Дополнительно проверяет повторные подписки и подписки на самого себя.
@@ -108,8 +105,8 @@ class SubscribeSerializer(CustomUserSerializer):
     recipes_count = serializers.SerializerMethodField()
     recipes = serializers.SerializerMethodField()
 
-    class Meta(CustomUserSerializer.Meta):
-        fields = CustomUserSerializer.Meta.fields + (
+    class Meta(CustomUserReadSerializer.Meta):
+        fields = CustomUserReadSerializer.Meta.fields + (
             'recipes_count', 'recipes'
         )
         read_only_fields = ('email', 'username')
@@ -139,7 +136,7 @@ class SubscribeSerializer(CustomUserSerializer):
         recipes = obj.recipes.all()
         if limit:
             recipes = recipes[:int(limit)]
-        serializer = RecipeForSubscribeSerializer(
+        serializer = RecipeShortSerializer(
             recipes, many=True, read_only=True
         )
         return serializer.data
@@ -168,7 +165,7 @@ class IngredientSerializer(serializers.ModelSerializer):
 
 
 class IngredientToRecipeWriteSerializer(serializers.Serializer):
-    """Вспомогательный сериалайзер для получения количества ингредиентов."""
+    """Вспомогательный сериалайзер для записи количества ингредиентов."""
 
     id = serializers.IntegerField(required=True)
     amount = serializers.IntegerField(required=True)
@@ -176,7 +173,7 @@ class IngredientToRecipeWriteSerializer(serializers.Serializer):
     def validate_amount(self, value):
         if value <= 0:
             raise serializers.ValidationError(
-                'Количесто ингредиента не может быть меньше отрицательным'
+                'Количесто ингредиента не может быть меньше 0'
             )
         return value
 
@@ -197,7 +194,7 @@ class RecipeSerializer(serializers.ModelSerializer):
     рецептов, удаления рецепта.
     """
 
-    author = CustomUserSerializer(read_only=True)
+    author = CustomUserReadSerializer(read_only=True)
     tags = TagSerializer(many=True)
     ingredients = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
@@ -234,36 +231,10 @@ class RecipeSerializer(serializers.ModelSerializer):
         return user.shopping_cart.filter(recipe=obj).exists()
 
     def validate_ingredients(self, value):
-        ingredients = value
-        if not ingredients:
-            raise ValidationError({
-                'ingredients': 'Нужен хотя бы один ингредиент.'
-            })
-        ingredients_list = []
-        for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
-            if ingredient in ingredients_list:
-                raise ValidationError({
-                    'ingredients': 'Ингридиенты не могут повторяться.'
-                })
-            if int(item['amount']) <= 0:
-                raise ValidationError({
-                    'amount': 'Количество ингредиента должно быть больше 0.'
-                })
-            ingredients_list.append(ingredient)
-        return value
+        return get_validate_ingredients(self, value, Ingredient)
 
     def validate_tags(self, value):
-        tags = value
-        if not tags:
-            raise ValidationError({'tags': 'Нужно выбрать хотя бы один тег.'})
-        tags_list = []
-        for tag in tags:
-            if tag in tags_list:
-                raise ValidationError({'tags': 'Теги должны быть уникальными.'})
-            tags_list.append(tag)
-        return value
-
+        return get_validate_tags(self, value)
 
 
 class RecipeCreateSerializer(serializers.ModelSerializer):
@@ -275,7 +246,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     )
 
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    ingredients = IngredientToRecipeWriteSerializer(many=True)
+    ingredients = IngredientToRecipeWriteSerializer(many=True,)
     image = Base64ImageField()
 
     class Meta:
@@ -286,70 +257,15 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         )
 
     def validate_ingredients(self, value):
-        ingredients = value
-        if not ingredients:
-            raise ValidationError({
-                'ingredients': 'Нужен хотя бы один ингредиент.'
-            })
-        ingredients_list = []
-        for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
-            if ingredient in ingredients_list:
-                raise ValidationError({
-                    'ingredients': 'Ингридиенты не могут повторяться.'
-                })
-            if int(item['amount']) <= 0:
-                raise ValidationError({
-                    'amount': 'Количество ингредиента должно быть больше 0.'
-                })
-            ingredients_list.append(ingredient)
-        return value
-
-    # def validate_ingredients(self, value):
-    #     ingredients = value
-    #     if not ingredients:
-    #         raise ValidationError({
-    #             'ingredients': 'Нужен хотя бы один ингредиент.'
-    #         })
-    #     ingredients_list = []
-    #     for item in ingredients:
-    #         # ingredient = Ingredient.objects.filter(id=item.get('id')).exists()
-    #         # if ingredient is False:
-    #         #     return ValidationError({'errors': 'Несуществующий ингридиент.'})
-    #         ingredient = Ingredient.objects.get(id=item.get('id'))
-    #         if ingredient in ingredients_list:
-    #             raise ValidationError({
-    #                 'ingredients': 'Ингридиенты не должны повторяться.'
-    #             })
-    #         if int(item['amount']) <= 0:
-    #             raise ValidationError({
-    #                 'amount': 'Количество ингредиентов должно быть больше 0.'
-    #             })
-    #         ingredients_list.append(ingredient)
-    #     # db_ings = Ingredient.objects.filter(pk__in=ingredients_list.keys())
-    #     # if not db_ings:
-    #     #     raise ValidationError({
-    #     #             'ingredients': 'Несуществующий ингридиент.'
-    #     #         })
-    #     return value
+        return get_validate_ingredients(self, value, Ingredient)
 
     def validate_tags(self, value):
-        tags = value
-        if not tags:
-            raise ValidationError({'tags': 'Нужно выбрать хотя бы один тег!'})
-        tags_list = []
-        for tag in tags:
-            if tag in tags_list:
-                raise ValidationError({
-                    'tags': 'Теги должны быть уникальными!'
-                })
-            tags_list.append(tag)
-        return value
-    
+        return get_validate_tags(self, value)
+
     def validate_cooking_time(self, value):
         if value <= 0:
             raise ValidationError({
-                'cooking_time': 'Время приготовления не может быть отрицательным'
+                'cooking_time': 'Время приготовления не может быть меньше 0'
             })
         return value
 

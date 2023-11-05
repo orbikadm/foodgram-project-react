@@ -1,3 +1,4 @@
+# flake8: noqa
 import os
 from pathlib import Path
 
@@ -8,6 +9,7 @@ SECRET_KEY = os.getenv(
     'insecure_key_xq24vp(!g2b0kqo2l)d)hcjpj=4!h09l%_o8%rzxxv%-8j*&yf'
 )
 
+# TODO Расскоментировать перед деплоем
 DEBUG = True #os.getenv('DEBUG','False').lower() in ('true', '1', 't')
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1 localhost').split(' ')
@@ -23,6 +25,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'django_filters',
 
     'users.apps.UsersConfig',
     'api.apps.ApiConfig',
@@ -65,6 +68,18 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# TODO Расскоментировать перед деплоем
+# DATABASES = {
+#     'default': {
+#         'ENGINE': os.getenv('DB_ENGINE'),
+#         'NAME': os.getenv('DB_NAME'),
+#         'USER': os.getenv('POSTGRES_USER'),
+#         'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
+#         'HOST': os.getenv('DB_HOST'),
+#         'PORT': os.getenv('DB_PORT')
+#     }
+# }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -110,8 +125,8 @@ REST_FRAMEWORK = {
 DJOSER = {
     'SERIALIZERS': {
         'user_create': 'api.serializers.CustomUserCreateSerializer',
-        'user': 'api.serializers.CustomUserSerializer',
-        'current_user': 'api.serializers.CustomUserSerializer',
+        'user': 'api.serializers.CustomUserReadSerializer',
+        'current_user': 'api.serializers.CustomUserReadSerializer',
     },
 
     'PERMISSIONS': {
@@ -122,7 +137,3 @@ DJOSER = {
 }
 
 AUTH_USER_MODEL = 'users.User'
-
-# AUTHENTICATION_BACKENDS = [
-#     'recipes.services.UserModelBackend',
-# ]

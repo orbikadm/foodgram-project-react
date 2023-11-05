@@ -1,40 +1,40 @@
-from django.core.exceptions import ValidationError
+from django.shortcuts import get_object_or_404
+from rest_framework.validators import ValidationError
 
 
-def tags_exist_validator(tags_ids, Tag):
-    if not tags_ids:
-        raise ValidationError("Не указаны тэги")
-
-    tags = Tag.objects.filter(id__in=tags_ids)
-
-    if len(tags) != len(tags_ids):
-        raise ValidationError("Указан несуществующий тэг")
-
-    return tags
-
-
-def ingredients_validator(ingredients, Ingredient):
+def get_validate_ingredients(self, ingredients, model):
     if not ingredients:
-        raise ValidationError("Не указаны ингридиенты")
+        raise ValidationError({
+            'ingredients': 'Нужен хотя бы один ингредиент'
+        })
+    ingredients_list = []
+    for item in ingredients:
+        ingredient_in_db = model.objects.filter(id=item['id'])
+        if not ingredient_in_db.exists():
+            raise ValidationError({
+                'ingredients': 'Такого ингридиента не сущестует'
+            })
+        ingredient = get_object_or_404(model, id=item['id'])
+        if ingredient in ingredients_list:
+            raise ValidationError({
+                'ingredients': 'Ингридиенты не могут повторяться'
+            })
+        if int(item['amount']) <= 0:
+            raise ValidationError({
+                'amount': 'Количество ингредиента должно быть больше 0'
+            })
+        ingredients_list.append(ingredient)
+    return ingredients
 
-    valid_ings = {}
 
-    for ing in ingredients:
-        if not (isinstance(ing["amount"], int) or ing["amount"].isdigit()):
-            raise ValidationError("Неправильное количество ингидиента")
-
-        valid_ings[ing["id"]] = int(ing["amount"])
-        if valid_ings[ing["id"]] <= 0:
-            raise ValidationError("Неправильное количество ингридиента")
-
-    if not valid_ings:
-        raise ValidationError("Неправильные ингидиенты")
-
-    db_ings = Ingredient.objects.filter(pk__in=valid_ings.keys())
-    if not db_ings:
-        raise ValidationError("Неправильные ингидиенты")
-
-    for ing in db_ings:
-        valid_ings[ing.pk] = (ing, valid_ings[ing.pk])
-
-    return valid_ings
+def get_validate_tags(self, tags):
+    if not tags:
+        raise ValidationError({'tags': 'Нужно выбрать хотя бы один тег'})
+    tags_list = []
+    for tag in tags:
+        if tag in tags_list:
+            raise ValidationError({
+                'tags': 'Теги должны быть уникальными'
+            })
+        tags_list.append(tag)
+    return tags
