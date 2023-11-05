@@ -1,12 +1,16 @@
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-(uf+b%6dt_t88%^+s_o3$y*hi6mfdsf5vm_xwj&p1crc$05psj'
+SECRET_KEY = os.getenv(
+    'DJANGO_SECRET_KEY',
+    'insecure_key_xq24vp(!g2b0kqo2l)d)hcjpj=4!h09l%_o8%rzxxv%-8j*&yf'
+)
 
-DEBUG = True
+DEBUG = True #os.getenv('DEBUG','False').lower() in ('true', '1', 't')
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1 localhost').split(' ')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -88,6 +92,10 @@ USE_L10N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'collected_static'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 

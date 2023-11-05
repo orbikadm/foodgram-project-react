@@ -79,13 +79,14 @@ class CustomUsersViewSet(UserViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
-            subscription = get_object_or_404(
-                Subscribe,
-                user=user,
-                author=author
+            subscription = Subscribe.objects.filter(user=user, author=author).exists()
+            if subscription:
+                subscription.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(
+                {'errors': 'Нельзя удалить несуществующую подписку.'},
+                status=status.HTTP_400_BAD_REQUEST
             )
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(
         detail=False,
@@ -174,7 +175,12 @@ class RecipeViewSet(ModelViewSet):
                 {'errors': 'Рецепт уже добавлен!'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        recipe = get_object_or_404(Recipe, id=pk)
+        recipe = Recipe.objects.filter(id=pk)
+        if not recipe.exists():
+            return Response(
+                {'errors': 'Несуществующий рецепт.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         model.objects.create(user=user, recipe=recipe)
         serializer = RecipeForSubscribeSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -185,7 +191,7 @@ class RecipeViewSet(ModelViewSet):
             obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
-            {'errors': 'Рецепт уже удален!'},
+            {'errors': 'Рецепт уже удален.'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
