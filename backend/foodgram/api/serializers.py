@@ -1,87 +1,17 @@
-import base64
-import webcolors
 
-from django.contrib.auth import get_user_model
-from django.core.files.base import ContentFile
 from django.db.models import F
 from django.db import transaction
-from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import status, serializers
 from rest_framework.validators import ValidationError
 
 from recipes.models import Recipe, Ingredient, Tag, IngredientToRecipe
 from users.models import Subscribe
-from .validators import get_validate_ingredients, get_validate_tags
-from .services import get_validated_tags_and_ingredients_if_exists
+from users.serializers import CustomUserReadSerializer
 
-
-User = get_user_model()
-
-
-class CustomUserReadSerializer(UserSerializer):
-    """Кастомный сериалайзер для пользователей."""
-
-    is_subscribed = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = (
-            'id',
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-        )
-        read_only_fields = ('is_subscribed',)
-        write_only_fields = ('password',)
-
-    def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
-        if user.is_anonymous:
-            return False
-        return Subscribe.objects.filter(user=user, author=obj).exists()
-
-
-class CustomUserCreateSerializer(UserCreateSerializer):
-    """Кастомный сериалайзер для создания пользователя."""
-
-    username = serializers.RegexField(r'^[\w.@+-]+\Z')
-
-    class Meta:
-        model = User
-        fields = (
-            'id',
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'password',
-        )
-        extra_kwargs = {
-            'first_name': {'required': True},
-            'last_name': {'required': True},
-            'username': {'required': True},
-        }
-
-    def validate_username(self, username):
-        if len(username) < 1 or len(username) > 150:
-            raise ValidationError('Длина username должна быть от 0 до 150')
-        return username
-
-
-class Base64ImageField(serializers.ImageField):
-    """
-    Сериалайзер для сохранения изображений на сервер.
-    Декодирует получаемую в формате base64 картинку для сохранения её на
-    сервере в файл.
-    """
-    def to_internal_value(self, data):
-        if isinstance(data, str) and data.startswith('data:image'):
-            format, imgstr = data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
-        return super().to_internal_value(data)
+from .services import (
+    get_validated_tags_and_ingredients_if_exists,
+    Base64ImageField, Hex2NameColor, BaseRecipeSerializer
+)
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):
@@ -144,20 +74,6 @@ class SubscribeSerializer(CustomUserReadSerializer):
         return serializer.data
 
 
-class Hex2NameColor(serializers.Field):
-    """Вспомогательный сериалайзер преобразует HEX-код цвета в его название."""
-
-    def to_representation(self, value):
-        return value
-
-    def to_internal_value(self, data):
-        try:
-            data = webcolors.hex_to_name(data)
-        except ValueError:
-            raise serializers.ValidationError('Для этого цвета нет имени')
-        return data
-
-
 class IngredientSerializer(serializers.ModelSerializer):
     """Сериалайзер для получения ингредиентов."""
 
@@ -190,7 +106,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'slug', 'color')
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeSerializer(BaseRecipeSerializer):
     """
     Сериалайзер для рецептов, используется для получения рецепта, списка
     рецептов, удаления рецепта.
@@ -232,21 +148,14 @@ class RecipeSerializer(serializers.ModelSerializer):
             return False
         return user.shopping_cart.filter(recipe=obj).exists()
 
-    def validate_ingredients(self, value):
-        return get_validate_ingredients(self, value, Ingredient)
 
-    def validate_tags(self, value):
-        return get_validate_tags(self, value)
-
-
-class RecipeCreateSerializer(serializers.ModelSerializer):
-    """Сериалайзер для создания рецепта."""
+class RecipeCreateSerializer(BaseRecipeSerializer):
+    """Сериалайзер для создания и обновления рецепта."""
 
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(),
         many=True
     )
-
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     ingredients = IngredientToRecipeWriteSerializer(many=True,)
     image = Base64ImageField()
@@ -257,12 +166,6 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             'id', 'author', 'name', 'text', 'image',
             'cooking_time', 'tags', 'ingredients'
         )
-
-    def validate_ingredients(self, value):
-        return get_validate_ingredients(self, value, Ingredient)
-
-    def validate_tags(self, value):
-        return get_validate_tags(self, value)
 
     def validate_cooking_time(self, value):
         if value <= 0:

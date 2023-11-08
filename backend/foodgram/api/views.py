@@ -14,11 +14,11 @@ from rest_framework.permissions import (
 
 from recipes.models import Ingredient, Recipe, Tag, Favorite, ShoppingCart
 from users.models import Subscribe
+from users.serializers import CustomUserReadSerializer
 from .filters import RecipeFilter, IngredientFilter
 from .serializers import (
     RecipeSerializer, IngredientSerializer, TagSerializer,
-    CustomUserReadSerializer, RecipeCreateSerializer, SubscribeSerializer,
-    RecipeShortSerializer
+    RecipeCreateSerializer, SubscribeSerializer, RecipeShortSerializer
 )
 from .permissions import IsAuthorOrReadOnly
 from .services import get_shopping_file, method_switch
