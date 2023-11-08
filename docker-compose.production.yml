@@ -12,18 +12,18 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
   backend:
-    build: ./backend/foodgram/
+    image: orbikadm/foodgram_backend
     env_file: .env
     volumes:
-      - static:/collected_static
+      - static:/backend_static
       - media:/app/media
   frontend:
-    build: ./frontend/
+    image: orbikadm/foodgram_frontend
     command: cp -r /app/build/. /frontend_static/
     volumes:
       - static:/frontend_static
   gateway:
-    build: ./nginx/
+    image: orbikadm/foodgram_gateway
     env_file: .env
     ports:
       - 80:80

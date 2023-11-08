@@ -1,17 +1,14 @@
-
-from django.db.models import F
 from django.db import transaction
-from rest_framework import status, serializers
+from django.db.models import F
+from rest_framework import serializers, status
 from rest_framework.validators import ValidationError
 
-from recipes.models import Recipe, Ingredient, Tag, IngredientToRecipe
+from recipes.models import Ingredient, IngredientToRecipe, Recipe, Tag
 from users.models import Subscribe
 from users.serializers import CustomUserReadSerializer
 
-from .services import (
-    get_validated_tags_and_ingredients_if_exists,
-    Base64ImageField, Hex2NameColor, BaseRecipeSerializer
-)
+from .services import (Base64ImageField, BaseRecipeSerializer, Hex2NameColor,
+                       get_validated_tags_and_ingredients_if_exists)
 
 
 class RecipeShortSerializer(serializers.ModelSerializer):

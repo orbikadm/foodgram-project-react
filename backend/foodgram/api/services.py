@@ -1,15 +1,16 @@
 import base64
 import datetime
-import webcolors
 
+import webcolors
 from django.core.files.base import ContentFile
 from django.db.models import Sum
 from django.http import HttpResponse
-from rest_framework import status
-from rest_framework import serializers
+from rest_framework import serializers, status
 
-from recipes.models import IngredientToRecipe, Ingredient
-from .validators import validate_tags_and_ingredients_exists, get_validate_ingredients, get_validate_tags
+from recipes.models import Ingredient, IngredientToRecipe
+
+from .validators import (get_validate_ingredients, get_validate_tags,
+                         validate_tags_and_ingredients_exists)
 
 
 class Base64ImageField(serializers.ImageField):

@@ -3,26 +3,24 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
 from rest_framework import status
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from rest_framework.pagination import LimitOffsetPagination
-from rest_framework.filters import SearchFilter
 from rest_framework.decorators import action
+from rest_framework.filters import SearchFilter
+from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import (AllowAny, IsAuthenticated,
+                                        IsAuthenticatedOrReadOnly)
 from rest_framework.response import Response
-from rest_framework.permissions import (
-    IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
-)
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
-from recipes.models import Ingredient, Recipe, Tag, Favorite, ShoppingCart
+from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from users.models import Subscribe
 from users.serializers import CustomUserReadSerializer
-from .filters import RecipeFilter, IngredientFilter
-from .serializers import (
-    RecipeSerializer, IngredientSerializer, TagSerializer,
-    RecipeCreateSerializer, SubscribeSerializer, RecipeShortSerializer
-)
-from .permissions import IsAuthorOrReadOnly
-from .services import get_shopping_file, method_switch
 
+from .filters import IngredientFilter, RecipeFilter
+from .permissions import IsAuthorOrReadOnly
+from .serializers import (IngredientSerializer, RecipeCreateSerializer,
+                          RecipeSerializer, RecipeShortSerializer,
+                          SubscribeSerializer, TagSerializer)
+from .services import get_shopping_file, method_switch
 
 User = get_user_model()
 

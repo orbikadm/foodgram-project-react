@@ -4,7 +4,6 @@ from rest_framework import serializers
 
 from .models import Subscribe
 
-
 User = get_user_model()
 
 
@@ -56,5 +55,7 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
     def validate_username(self, username):
         if len(username) < 1 or len(username) > 150:
-            raise serializers.ValidationError('Длина username должна быть от 0 до 150')
+            raise serializers.ValidationError(
+                'Длина username должна быть от 0 до 150'
+            )
         return username
