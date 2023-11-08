@@ -84,7 +84,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.ref_name == 'main' }}
+    if: ${{ github.ref_name == 'master' }}
     needs: 
       - build_and_push_to_docker_hub
       - build_frontend_and_push_to_docker_hub
