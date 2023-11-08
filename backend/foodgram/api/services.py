@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from rest_framework import status
 
 from recipes.models import IngredientToRecipe
-
+from .validators import validate_tags_and_ingredients_exists
 
 def get_shopping_file(self, request):
     user = request.user
@@ -44,3 +44,10 @@ def method_switch(self, request, model, pk):
         return self.add_to(model, request.user, pk)
     else:
         return self.delete_from(model, request.user, pk)
+
+
+def get_validated_tags_and_ingredients_if_exists(self, validated_data):
+    validate_tags_and_ingredients_exists(self, validated_data)
+    tags = validated_data.pop('tags')
+    ingredients = validated_data.pop('ingredients')
+    return tags, ingredients

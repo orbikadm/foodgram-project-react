@@ -12,6 +12,8 @@ from rest_framework.validators import ValidationError
 from recipes.models import Recipe, Ingredient, Tag, IngredientToRecipe
 from users.models import Subscribe
 from .validators import get_validate_ingredients, get_validate_tags
+from .services import get_validated_tags_and_ingredients_if_exists
+
 
 User = get_user_model()
 
@@ -281,8 +283,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
+        tags, ingredients = get_validated_tags_and_ingredients_if_exists(
+            self, validated_data
+        )
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         self.create_ingredients_amounts(recipe=recipe, ingredients=ingredients)
@@ -290,8 +293,9 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     @transaction.atomic
     def update(self, instance, validated_data):
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
+        tags, ingredients = get_validated_tags_and_ingredients_if_exists(
+            self, validated_data
+        )
         instance = super().update(instance, validated_data)
         instance.tags.clear()
         instance.tags.set(tags)

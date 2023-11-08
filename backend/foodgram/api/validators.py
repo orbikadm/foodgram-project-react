@@ -38,3 +38,10 @@ def get_validate_tags(self, tags):
             })
         tags_list.append(tag)
     return tags
+
+
+def validate_tags_and_ingredients_exists(self, validated_data):
+    if not validated_data.get('tags') or not validated_data.get('ingredients'):
+        raise ValidationError(
+            'Ингридиенты и теги обязательны!'
+        )
