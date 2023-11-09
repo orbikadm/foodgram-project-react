@@ -5,3 +5,4 @@ djoser==2.2.0
 webcolors==1.13
 django-filter==22.1
 gunicorn==21.2.0
+psycopg2==2.9.9
