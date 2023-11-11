@@ -72,7 +72,7 @@ class CustomUsersViewSet(UserViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         if request.method == 'DELETE':
-            subscription = Subscribe.objects.filter(user=user, author=author)
+            subscription = author.owner.filter(user=user)
             if subscription.exists():
                 subscription.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
@@ -188,5 +188,4 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
-        response = get_shopping_file(self, request)
-        return response
+        return get_shopping_file(self, request)

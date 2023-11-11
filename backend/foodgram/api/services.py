@@ -84,8 +84,7 @@ def get_shopping_file(self, request):
 def method_switch(self, request, model, pk):
     if request.method == 'POST':
         return self.add_to(model, request.user, pk)
-    else:
-        return self.delete_from(model, request.user, pk)
+    return self.delete_from(model, request.user, pk)
 
 
 def get_validated_tags_and_ingredients_if_exists(self, validated_data):

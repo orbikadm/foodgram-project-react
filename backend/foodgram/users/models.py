@@ -40,6 +40,7 @@ class Subscribe(models.Model):
     )
 
     class Meta:
+        ordering = ('author',)
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'author'),

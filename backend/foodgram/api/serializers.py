@@ -1,10 +1,10 @@
+from django.conf import settings
 from django.db import transaction
 from django.db.models import F
 from rest_framework import serializers, status
 from rest_framework.validators import ValidationError
 
 from recipes.models import Ingredient, IngredientToRecipe, Recipe, Tag
-from users.models import Subscribe
 from users.serializers import CustomUserReadSerializer
 
 from .services import (Base64ImageField, BaseRecipeSerializer, Hex2NameColor,
@@ -42,8 +42,8 @@ class SubscribeSerializer(CustomUserReadSerializer):
 
     def validate(self, data):
         author = self.instance
-        user = self.context.get('request').user
-        subscribe = Subscribe.objects.filter(author=author, user=user).exists()
+        user = self.context['request'].user
+        subscribe = author.owner.filter(user=user).exists()
         if subscribe:
             raise ValidationError(
                 detail='Вы уже подписаны на этого пользователя!',
@@ -83,14 +83,11 @@ class IngredientToRecipeWriteSerializer(serializers.Serializer):
     """Вспомогательный сериалайзер для записи количества ингредиентов."""
 
     id = serializers.IntegerField(required=True)
-    amount = serializers.IntegerField(required=True)
-
-    def validate_amount(self, value):
-        if value <= 0:
-            raise serializers.ValidationError(
-                'Количесто ингредиента не может быть меньше 0'
-            )
-        return value
+    amount = serializers.IntegerField(
+        required=True,
+        min_value=settings.MIN_AMOUNT_INGR,
+        max_value=settings.MAX_AMOUNT_INGR,
+    )
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -134,13 +131,13 @@ class RecipeSerializer(BaseRecipeSerializer):
         return ingredients
 
     def get_is_favorited(self, obj):
-        user = self.context.get('request').user
+        user = self.context['request'].user
         if user.is_anonymous:
             return False
         return user.favorites.filter(recipe=obj).exists()
 
     def get_is_in_shopping_cart(self, obj):
-        user = self.context.get('request').user
+        user = self.context['request'].user
         if user.is_anonymous:
             return False
         return user.shopping_cart.filter(recipe=obj).exists()
@@ -156,6 +153,9 @@ class RecipeCreateSerializer(BaseRecipeSerializer):
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     ingredients = IngredientToRecipeWriteSerializer(many=True,)
     image = Base64ImageField()
+    cooking_time = serializers.IntegerField(
+        min_value=settings.MIN_COOCK_TIME, max_value=settings.MAX_COOCK_TIME
+    )
 
     class Meta:
         model = Recipe
@@ -163,13 +163,6 @@ class RecipeCreateSerializer(BaseRecipeSerializer):
             'id', 'author', 'name', 'text', 'image',
             'cooking_time', 'tags', 'ingredients'
         )
-
-    def validate_cooking_time(self, value):
-        if value <= 0:
-            raise ValidationError({
-                'cooking_time': 'Время приготовления не может быть меньше 0'
-            })
-        return value
 
     @transaction.atomic
     def create_ingredients_amounts(self, ingredients, recipe):

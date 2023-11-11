@@ -2,7 +2,6 @@ from django.contrib.auth import get_user_model
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from rest_framework import serializers
 
-from .models import Subscribe
 
 User = get_user_model()
 
@@ -26,16 +25,16 @@ class CustomUserReadSerializer(UserSerializer):
         write_only_fields = ('password',)
 
     def get_is_subscribed(self, obj):
-        user = self.context.get('request').user
+        user = self.context['request'].user
         if user.is_anonymous:
             return False
-        return Subscribe.objects.filter(user=user, author=obj).exists()
+        return obj.owner.filter(user=user).exists()
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
     """Кастомный сериалайзер для создания пользователя."""
 
-    username = serializers.RegexField(r'^[\w.@+-]+\Z')
+    username = serializers.RegexField(r'^[\w.@+-]{1,150}\Z')
 
     class Meta:
         model = User
@@ -52,10 +51,3 @@ class CustomUserCreateSerializer(UserCreateSerializer):
             'last_name': {'required': True},
             'username': {'required': True},
         }
-
-    def validate_username(self, username):
-        if len(username) < 1 or len(username) > 150:
-            raise serializers.ValidationError(
-                'Длина username должна быть от 0 до 150'
-            )
-        return username

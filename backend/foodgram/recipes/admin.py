@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin
 
 from .models import (Favorite, Ingredient, IngredientToRecipe, Recipe,
@@ -7,6 +8,7 @@ from .models import (Favorite, Ingredient, IngredientToRecipe, Recipe,
 class IngredientToRecipeAdmin(admin.TabularInline):
     model = IngredientToRecipe
     list_display = ('recipe', 'ingredient', 'amount')
+    min_num = settings.MIN_AMOUNT_INGR
 
 
 @admin.register(Recipe)

@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator, RegexValidator
+from django.conf import settings
+from django.core.validators import (MaxValueValidator, MinValueValidator,
+                                    RegexValidator)
 from django.db import models
 
 User = get_user_model()
@@ -22,7 +24,7 @@ class Tag(models.Model):
     name = models.CharField('Название', max_length=200, unique=True)
     color = models.CharField(
         'Цвет в HEX',
-        max_length=7,
+        max_length=settings.LENGTH_TAG_COLOR,
         unique=True,
         validators=[
             RegexValidator(
@@ -38,11 +40,12 @@ class Tag(models.Model):
     )
 
     class Meta:
+        ordering = ('name',)
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
 
     def __str__(self):
-        return self.name[:50]
+        return self.name[:settings.MAX_LENGHT_STRING_IN_ADMIN]
 
 
 class Recipe(models.Model):
@@ -55,7 +58,19 @@ class Recipe(models.Model):
     name = models.CharField('Название', max_length=200)
     text = models.TextField('Описание',)
     image = models.ImageField('Картинка', upload_to='recipes/images')
-    cooking_time = models.PositiveSmallIntegerField('Время приготовления',)
+    cooking_time = models.PositiveSmallIntegerField(
+        'Время приготовления',
+        validators=[
+            MinValueValidator(
+                settings.MIN_COOCK_TIME,
+                message=f'Минимальное количество {settings.MIN_COOCK_TIME}!'
+            ),
+            MaxValueValidator(
+                settings.MAX_COOCK_TIME,
+                message=f'Максимальное количество {settings.MAX_COOCK_TIME}!'
+            )
+        ]
+    )
     tags = models.ManyToManyField(
         'Tag',
         verbose_name='Теги',
@@ -68,11 +83,12 @@ class Recipe(models.Model):
     )
 
     class Meta:
+        ordering = ('name',)
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
 
     def __str__(self):
-        return self.name[:50]
+        return self.name[:settings.MAX_LENGTH_STRING_IN_ADMIN]
 
 
 class IngredientToRecipe(models.Model):
@@ -88,10 +104,20 @@ class IngredientToRecipe(models.Model):
     )
     amount = models.PositiveSmallIntegerField(
         'Количество',
-        validators=[MinValueValidator(1, message='Минимальное количество 1!')]
+        validators=[
+            MinValueValidator(
+                settings.MIN_AMOUNT_INGR,
+                message=f'Минимальное количество {settings.MIN_AMOUNT_INGR}!'
+            ),
+            MaxValueValidator(
+                settings.MAX_AMOUNT_INGR,
+                message=f'Максимальное количество {settings.MAX_AMOUNT_INGR}!'
+            ),
+        ]
     )
 
     class Meta:
+        ordering = ('recipe',)
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты в рецептах'
         constraints = [
@@ -118,6 +144,7 @@ class Favorite(models.Model):
     )
 
     class Meta:
+        ordering = ('user',)
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранное'
         default_related_name = 'favorites'
@@ -147,6 +174,7 @@ class ShoppingCart(models.Model):
     )
 
     class Meta:
+        ordering = ('user',)
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзина'
         constraints = [
