@@ -4,6 +4,7 @@ from django.core.validators import (MaxValueValidator, MinValueValidator,
                                     RegexValidator)
 from django.db import models
 
+
 User = get_user_model()
 
 
@@ -45,7 +46,7 @@ class Tag(models.Model):
         verbose_name_plural = 'Теги'
 
     def __str__(self):
-        return self.name[:settings.MAX_LENGHT_STRING_IN_ADMIN]
+        return self.name[:settings.MAX_LENGTH_STRING_IN_ADMIN]
 
 
 class Recipe(models.Model):

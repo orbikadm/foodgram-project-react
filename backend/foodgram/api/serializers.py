@@ -6,7 +6,6 @@ from rest_framework.validators import ValidationError
 
 from recipes.models import Ingredient, IngredientToRecipe, Recipe, Tag
 from users.serializers import CustomUserReadSerializer
-
 from .services import (Base64ImageField, BaseRecipeSerializer, Hex2NameColor,
                        get_validated_tags_and_ingredients_if_exists)
 

@@ -8,7 +8,6 @@ from django.http import HttpResponse
 from rest_framework import serializers, status
 
 from recipes.models import Ingredient, IngredientToRecipe
-
 from .validators import (get_validate_ingredients, get_validate_tags,
                          validate_tags_and_ingredients_exists)
 

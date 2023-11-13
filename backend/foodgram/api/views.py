@@ -14,13 +14,13 @@ from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from recipes.models import Favorite, Ingredient, Recipe, ShoppingCart, Tag
 from users.models import Subscribe
 from users.serializers import CustomUserReadSerializer
-
 from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsAuthorOrReadOnly
 from .serializers import (IngredientSerializer, RecipeCreateSerializer,
                           RecipeSerializer, RecipeShortSerializer,
                           SubscribeSerializer, TagSerializer)
 from .services import get_shopping_file, method_switch
+
 
 User = get_user_model()
 

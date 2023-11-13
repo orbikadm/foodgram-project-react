@@ -1,5 +1,6 @@
 from django.core.exceptions import ValidationError
 
+
 FORBIDDEN_USERNAME = ('me', 'user', 'admin', 'moderator')
 
 
